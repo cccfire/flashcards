@@ -11,6 +11,7 @@ var backtext;
 var state = 0;
 
 var cards;
+var incorrectlist = [];
 
 var submitbutton = document.getElementById("submitbutton");
 var inputcards = document.getElementById("inputcards");
@@ -31,36 +32,45 @@ elementFromHtml(`<div id="card">
     </div>
   </div>
 </div>`), elementFromHtml(`<input id="inputfield"></input>`)]);
-cardinner = document.getElementById("card-inner");
-inputfield = document.getElementById("inputfield");
-cardfront = document.getElementById("card-front");
-cardback = document.getElementById("card-back");
-fronttext = document.getElementById("front-text");
-backtext = document.getElementById("back-text");
-inputfield.addEventListener("keyup", ({key}) => {
-  if (key === "Enter") {
-    if (state == 0) {
-      cardinner.classList.toggle("flip");
-      backtext.classList.remove("hidden");
-      if (inputfield.value.trim().toLowerCase() === cards.pairs[cards.i][1].toLowerCase()) 
-        backtext.classList.add("correct");
-      else
-        backtext.classList.add("incorrect");
-      
-      state++;
-    } else if (state == 1) {
-      backtext.classList.remove("correct");
-      backtext.classList.remove("incorrect");
-      backtext.classList.add("hidden");
-      cardinner.classList.toggle("flip");
-      cards.i++;
-      fronttext.textContent = cards.pairs[cards.i][0];
-      backtext.textContent = cards.pairs[cards.i][1];
-      inputfield.value = "";
-      state = 0;
-    } 
-  }
-})
+  cardinner = document.getElementById("card-inner");
+  inputfield = document.getElementById("inputfield");
+  cardfront = document.getElementById("card-front");
+  cardback = document.getElementById("card-back");
+  fronttext = document.getElementById("front-text");
+  backtext = document.getElementById("back-text");
+  inputfield.addEventListener("keyup", ({key}) => {
+    if (key === "Enter") {
+      if (state == 0) {
+        cardinner.classList.toggle("flip");
+        backtext.classList.remove("hidden");
+        if (inputfield.value.trim().toLowerCase() === cards.pairs[cards.i][1].toLowerCase()) {
+          backtext.classList.add("correct");
+        }
+        else {
+          backtext.classList.add("incorrect");
+          incorrectlist.push(cards.pairs[cards.i]);
+        }
+        
+        state++;
+      } else if (state == 1) {
+        backtext.classList.remove("correct");
+        backtext.classList.remove("incorrect");
+        backtext.classList.add("hidden");
+        cardinner.classList.toggle("flip");
+        cards.i++;
+        if (cards.i >= cards.pairs.length) {
+          inputfield.parentNode.replaceChildren(...[
+            elementFromHtml(`<div id="finalcard"><p>Score: ${incorrectlist.length}/${cards.pairs.length}</p></div>`)
+          ])
+        } else {
+          fronttext.textContent = cards.pairs[cards.i][0];
+          backtext.textContent = cards.pairs[cards.i][1];
+          inputfield.value = "";
+          state = 0;
+        }
+      } 
+    }
+  })
 }
 
 function uploadFile(file) {
@@ -74,7 +84,7 @@ function makeQuizSet (cards) {
   var trimmed = cards.trim();
   var splitnewl = trimmed.split(/\r?\n/);
   for (var i = 0; i < splitnewl.length; i++) {
-    splitnewl[i] = splitnewl[i].split(",", 2);
+    splitnewl[i] = splitnewl[i].split("::=", 2);
   }
   for (var i = 0; i < splitnewl.length; i++) 
     for (var j = 0; j < 2; j++)
